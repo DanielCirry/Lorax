@@ -1,11 +1,40 @@
-﻿using InterviewTestMid.Interfaces;
+﻿using CsvHelper.Configuration;
+using CsvHelper;
+using InterviewTestMid.Interfaces;
 using InterviewTestMid.Models;
 using Newtonsoft.Json;
+using System.Globalization;
 
 namespace InterviewTestMid.Repositories
 {
     public class PartRepository : IPartRepository
     {
+        public string CreateCSVFile()
+        {
+            string path = Path.Combine(Environment.CurrentDirectory, "Data", "result.csv");
+            if (!File.Exists(path))
+                using (File.Create(path)) { }
+
+            return path;
+        }
+
+        public async Task WriteDataToCSVFile(List<string> orders, string path)
+        {
+            var csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = false
+            };
+
+            using (var writer = new StreamWriter(path, true))
+            using (var csv = new CsvWriter(writer, csvConfiguration))
+            {
+                foreach (var order in orders)
+                {
+                    await csv.WriteRecordsAsync(order);
+                }
+            }
+        }
+
         public List<MaterialDetails>? GeMaterialListByMaterialName(string materialName)
         {
             string? sampleData = GetDataPath();
@@ -21,7 +50,7 @@ namespace InterviewTestMid.Repositories
 
         public bool WriteDataOnFile(List<Part>? sampleData, string modifiedSampleDataPath)
         {
-            using (StreamWriter w = new StreamWriter(modifiedSampleDataPath, true))
+            using (StreamWriter w = new StreamWriter(modifiedSampleDataPath))
             {
                 var jsonFile = JsonConvert.SerializeObject(sampleData,
                     new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal });

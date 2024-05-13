@@ -33,27 +33,15 @@ namespace InterviewTestMid.Services
         {
             try
             {
-                string path = Path.Combine(Environment.CurrentDirectory,"Data", "result.csv");
-                if (!File.Exists(path))
-                    using (File.Create(path)) { }
+                string path = _partRepository.CreateCSVFile();
 
-
-                var csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HasHeaderRecord = false
-                };
-
-                using (var writer = new StreamWriter(path, true))
-                using (var csv = new CsvWriter(writer, csvConfiguration))
-                {
-                    foreach (var order in orders) {
-                    await csv.WriteRecordsAsync(order); }
-                }
+                await _partRepository.WriteDataToCSVFile(orders, path);
 
             }
             catch (Exception ex)
             {
                 WriteErrorMessage(ex);
+                throw new Exception();
             }
         }
 

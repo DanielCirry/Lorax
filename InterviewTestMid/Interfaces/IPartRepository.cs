@@ -9,6 +9,8 @@ namespace InterviewTestMid.Interfaces
 {
     public interface IPartRepository
     {
+        string CreateCSVFile();
+        Task WriteDataToCSVFile(List<string> orders, string path);
         List<MaterialDetails>? GeMaterialListByMaterialName(string materialName);
         List<Part>? GeData();
         bool WriteDataOnFile(List<Part>? sampleData, string modifiedSampleDataPath);
