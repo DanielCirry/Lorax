@@ -1,20 +1,46 @@
-﻿namespace InterviewTestMid
+﻿using InterviewTestMid.Interfaces;
+using InterviewTestMid.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+IHost _host = Host.CreateDefaultBuilder().ConfigureServices(services =>
 {
-    internal class Program
-    {
-        public Program()
-        {
-            DoWork();
-        }
+    services.AddSingleton<ILogger, Logger>();
+})
+    .Build();
 
-        private void DoWork()
-        {
-            Logger Log = new ();
-            Log.WriteLogMessage("Doing some JSON tasks...");
 
-            //Do JSON tasks here.
 
-            Log.WriteLogMessage("Finished doing some JSON tasks.");
-        }
-    }
+var logger = _host.Services.GetRequiredService<ILogger>();
+logger.WriteLogMessage("Doing some JSON tasks...");
+await logger.WriteCSV(new List<string>() { "abc",  "def", "ghi" });
+
+var materials = logger.GetMaterialDetails("FOIL");
+foreach (var item in materials)
+{
+    logger.WriteLogMessage($"LookId: {item.Material.LookId}");
+    logger.WriteLogMessage($"LookNbr: {item.Material.LookNbr}");
+    logger.WriteLogMessage($"LookDesc: {item.Material.LookDesc}");
+
+    logger.WriteLogMessage($"Percentage: {item.Percentage}");
+    logger.WriteLogMessage($"MatrIsBarrier: {item.MatrIsBarrier}");
+    logger.WriteLogMessage($"MatrIsDensier: {item.MatrIsDensier}");
+    logger.WriteLogMessage($"MatrIsOppacifier: {item.MatrIsOppacifier}");
 }
+
+var materialsWWithLinqQuery = logger.GetMaterialDetailsLinq("FOIL"); ;
+foreach (var item in materialsWWithLinqQuery)
+{
+    logger.WriteLogMessage($"LookId: {item.Material.LookId}");
+    logger.WriteLogMessage($"LookNbr: {item.Material.LookNbr}");
+    logger.WriteLogMessage($"LookDesc: {item.Material.LookDesc}");
+
+    logger.WriteLogMessage($"Percentage: {item.Percentage}");
+    logger.WriteLogMessage($"MatrIsBarrier: {item.MatrIsBarrier}");
+    logger.WriteLogMessage($"MatrIsDensier: {item.MatrIsDensier}");
+    logger.WriteLogMessage($"MatrIsOppacifier: {item.MatrIsOppacifier}");
+}
+
+logger.ModifyPartWeight(2.00000M);
+
+logger.WriteLogMessage("Finished doing some JSON tasks.");
