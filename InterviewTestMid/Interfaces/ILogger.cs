@@ -1,9 +1,4 @@
 ﻿using InterviewTestMid.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace InterviewTestMid.Interfaces
 {
@@ -12,8 +7,10 @@ namespace InterviewTestMid.Interfaces
         void WriteLogMessage(string LogMessage);
         void WriteErrorMessage(Exception Ex);
         Task WriteCSV(List<string> orders);
-        List<MaterialDetails>? GetMaterialDetails(string materialName);
+        List<Part>? GetData();
+        List<Part>? GetDataByPath(string path);
         List<MaterialDetails>? GetMaterialDetailsLinq(string materialName);
-        bool ModifyPartWeight(decimal value);
+        string GetFilePathToSavedData(string fileName);
+        string ModifyPartWeightValue(string partDesc, decimal value, string fileName);
     }
 }

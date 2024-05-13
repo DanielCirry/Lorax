@@ -1,20 +1,16 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
-using InterviewTestMid.DTOs;
 using InterviewTestMid.Interfaces;
 using InterviewTestMid.Models;
-using Newtonsoft.Json;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 
 namespace InterviewTestMid.Services
 {
-    internal class Logger : ILogger
+    public class Logger(IPartRepository partRepository) : ILogger
     {
+        public IPartRepository _partRepository = partRepository;
+
         public void WriteLogMessage(string LogMessage)
         {
             var currentTime = DateTime.UtcNow;
@@ -55,86 +51,60 @@ namespace InterviewTestMid.Services
                 }
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                WriteErrorMessage(ex);
             }
         }
 
-        public List<MaterialDetails>? GetMaterialDetails(string materialName)
-        {
-            var sampleData = Path.Combine(Environment.CurrentDirectory, "Data", "SampleData.json");
-            if (sampleData == null)
-                return null;
-
-            using (StreamReader r = new StreamReader(sampleData))
-            {
-                string json = r.ReadToEnd();
-                List<Part> partOrders = JsonConvert.DeserializeObject<List<Part>>(json, 
-                    new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal });
-                Part? part = partOrders?.Find(p => p.PartDesc == materialName);
-                if (part == null)
-                    return null;
-
-                return part.Materials;
-            }
-        }
+        public List<Part>? GetData() => _partRepository.GeData();
+        public List<Part>? GetDataByPath(string path) => _partRepository.GeData();
 
         public List<MaterialDetails>? GetMaterialDetailsLinq(string materialName)
         {
-            var sampleData = Path.Combine(Environment.CurrentDirectory, "Data", "SampleData.json");
-            if (sampleData == null)
-                return null;
+            return _partRepository.GeMaterialListByMaterialName(materialName);
+        }
 
-            using (StreamReader r = new StreamReader(sampleData))
+        public string GetFilePathToSavedData(string fileName)
+        {
+            try
             {
-                string json = r.ReadToEnd();
-                List<Part> partOrders = JsonConvert.DeserializeObject<List<Part>>(json, 
-                    new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal });
-
-                var materials =
-                    (from part in partOrders
-                    where part.PartDesc == materialName
-                    select part.Materials).FirstOrDefault();
-                
-                if (materials.Count() == 0)
-                    return null;
-
-                return materials;
+                return _partRepository.GetFilePathToSavedData(fileName);
+            }
+            catch (Exception ex)
+            {
+                WriteErrorMessage(ex);
+                throw new Exception();
             }
         }
 
-        public bool ModifyPartWeight(decimal value)
+        public string ModifyPartWeightValue(string partDesc, decimal value, string fileName)
         {
-            var parent = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName;
-            var modifiedSampleData = Path.Combine(parent, "Data", 
-                $"{DateTime.Now.ToString("g").Replace('/', '-').Replace(':','-')} ModifiedSampleData.json");
-
-            var sampleData = Path.Combine(Environment.CurrentDirectory, "Data", "SampleData.json");
-            if (sampleData == null)
-                return false;
-
-            using (StreamWriter w  = new StreamWriter(modifiedSampleData, true))
-            using (StreamReader r = new StreamReader(sampleData))
+            try
             {
-                string json = r.ReadToEnd();
-                List<Part> partOrders = JsonConvert.DeserializeObject<List<Part>>(json, 
-                    new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal });
-                Part? part = partOrders?.Find(p => p.PartDesc == "BLUE TRAY");
+                var sampleData = _partRepository.GeData();
+                if (sampleData == null)
+                    return string.Empty;
 
+                string pathToSavedData = _partRepository.GetFilePathToSavedData(fileName);
+
+                Part? part = sampleData?.Find(p => p.PartDesc == partDesc);
                 if (part == null)
-                    return false;
+                    return string.Empty;
 
                 part.PartWeight.Value = value;
 
-                var jsonFile = JsonConvert.SerializeObject(partOrders, 
-                    new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal });
+                if (_partRepository.WriteDataOnFile(sampleData, pathToSavedData))
+                    return pathToSavedData;
 
-                w.WriteLine(jsonFile);
-
-                return true;
             }
+            catch (Exception ex)
+            {
+                WriteErrorMessage(ex);
+                throw new Exception();
+            }
+
+            return string.Empty;
         }
     }
 }
